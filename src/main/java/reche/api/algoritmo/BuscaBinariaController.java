@@ -1,7 +1,5 @@
 package reche.api.algoritmo;
 
-import java.util.LinkedList;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,41 +12,64 @@ import org.springframework.web.bind.annotation.RestController;
 public class BuscaBinariaController {
 	
 	@GetMapping
-	public ResponseEntity<Long> busca(
+	public ResponseEntity<String> busca(
 			@RequestParam(required = true) int numeroEscolhido
 			){
 		
-		var numeros = new LinkedList<Long>();
-		for (long i = 0; i <= 2_000_000; i++) {
-			System.out.println("Add: " + i);
-			numeros.add(i);
+		int tamanhoDoArray = 2_000_000;				
+		
+		if (numeroEscolhido > tamanhoDoArray) {
+			return new ResponseEntity<String>("""
+					Valor maior que o tamanho da lista.
+					Tamanho da lista: %s
+					""".formatted(tamanhoDoArray), 
+					HttpStatus.BAD_REQUEST);
+		}
+		
+		int[] numeros = new int[tamanhoDoArray];
+		for (int i = 0; i < tamanhoDoArray; i++) {
+			var valor = i+1;
+			System.out.println("Add: " + valor);
+			numeros[i] = valor;
 		}
 		
 		var tempoInicio = System.currentTimeMillis();
-		
-		
-		var teste = numeros.get(numeroEscolhido);
-		System.out.println(teste);
-		
+		for (int i = 0; i < tamanhoDoArray; i++) {
+			if (numeros[i] == numeroEscolhido) {
+				break;
+			}
+		}
 		var tempoFinal = System.currentTimeMillis();
-		
-		var resultadoTempo = tempoFinal - tempoInicio;
-		System.out.println(resultadoTempo);
+		var resultadoTempoLinear = tempoFinal - tempoInicio;
 		
 		tempoInicio = System.currentTimeMillis();
-		int divisor = 2_000_000 / 2;
+		int divisor = tamanhoDoArray / 2;
+		var maiorDivisor = tamanhoDoArray;
 		while (numeroEscolhido != divisor) {
+			System.out.println("Divisor: " + divisor);
 			if (divisor < numeroEscolhido) {
-				divisor = divisor + (divisor / 2);
+				divisor = divisor + calculaAdicao(maiorDivisor, divisor);
 			} else {
-				divisor = divisor - (divisor / 2);
+				maiorDivisor = divisor;
+				divisor = divisor / 2;
 			}
 		}
 		tempoFinal = System.currentTimeMillis();
-		resultadoTempo = tempoFinal - tempoInicio;
-		System.out.println(resultadoTempo);
-		return new ResponseEntity<Long>(resultadoTempo, 
+		var resultadoTempoBuscaBinaria = tempoFinal - tempoInicio;
+
+		return new ResponseEntity<String>("""
+				Tempo da Busca linear: %s ms
+				Tempo da Busca binária: %s ms
+				""".formatted(resultadoTempoLinear, resultadoTempoBuscaBinaria), 
 				HttpStatus.OK);
+	}
+	
+	private int calculaAdicao(int maiorDivisor, int divisor) {
+		int valor = ((maiorDivisor - divisor) / 2);
+		if (valor == 0) {
+			return 1;
+		}
+		return valor;
 	}
 
 }
